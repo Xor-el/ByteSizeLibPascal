@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{B6E2020E-C785-4102-8226-CD62C6D52A20}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="ByteSizeLib\ByteSizeLibPascal.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ByteSizeLib.Tests\ByteSizeLib.Tests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="ByteSizeLibPascal">
+        <MSBuild Projects="ByteSizeLib\ByteSizeLibPascal.dproj"/>
+    </Target>
+    <Target Name="ByteSizeLibPascal:Clean">
+        <MSBuild Projects="ByteSizeLib\ByteSizeLibPascal.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ByteSizeLibPascal:Make">
+        <MSBuild Projects="ByteSizeLib\ByteSizeLibPascal.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ByteSizeLib_Tests">
+        <MSBuild Projects="ByteSizeLib.Tests\ByteSizeLib.Tests.dproj"/>
+    </Target>
+    <Target Name="ByteSizeLib_Tests:Clean">
+        <MSBuild Projects="ByteSizeLib.Tests\ByteSizeLib.Tests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ByteSizeLib_Tests:Make">
+        <MSBuild Projects="ByteSizeLib.Tests\ByteSizeLib.Tests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="ByteSizeLibPascal;ByteSizeLib_Tests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="ByteSizeLibPascal:Clean;ByteSizeLib_Tests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="ByteSizeLibPascal:Make;ByteSizeLib_Tests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
