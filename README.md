@@ -164,7 +164,7 @@ end;
 
 #### Parsing
 
-`ByteSize` has a `Parse` and `TryParse` method similar to other base classes.
+`ByteSize` has a `Parse` and `TryParse` method.
 
 Like other `TryParse` methods, `ByteSize.TryParse` returns `boolean` value indicating whether or not the parsing was successful. If the value is parsed it is output to the `out` parameter supplied.
 
