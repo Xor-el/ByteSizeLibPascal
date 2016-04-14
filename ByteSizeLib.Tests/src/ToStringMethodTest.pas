@@ -9,7 +9,11 @@ type
 
   [TestFixture]
   TToStringMethod = class(TObject)
+  class var
+    FFormatSettings: TFormatSettings;
   public
+    [Setup]
+    procedure Setup();
     [Test]
     procedure ReturnsLargestMetricSuffix();
     [Test]
@@ -41,16 +45,26 @@ type
     [Test]
     procedure ReturnsLargestMetricSuffixUsingCustomFormatSettingsTwo();
     [Test]
+    procedure ReturnsLargestMetricSuffixUsingCustomFormatSettingsThree();
+    [Test]
     procedure ReturnsLargestMetricSuffixUsingCurrentLocale();
   end;
 
 implementation
 
+procedure TToStringMethod.Setup();
+
+begin
+  FFormatSettings := TFormatSettings.Create;
+end;
+
 procedure TToStringMethod.ReturnsLargestMetricSuffix();
 var
   b: TByteSize;
   result: String;
+  lDouble: Double;
 begin
+  lDouble := 10.5;
   // Arrange
   b := TByteSize.FromKiloBytes(10.5);
 
@@ -58,14 +72,16 @@ begin
   result := b.ToString();
 
   // Assert
-  Assert.AreEqual('10.5 KB', result);
+  Assert.AreEqual(FormatFloat('0.0 KB', lDouble, FFormatSettings), result);
 end;
 
 procedure TToStringMethod.ReturnsDefaultNumberFormat();
 var
   b: TByteSize;
   result: String;
+  lDouble: Double;
 begin
+  lDouble := 10.5;
   // Arrange
   b := TByteSize.FromKiloBytes(10.5);
 
@@ -73,14 +89,16 @@ begin
   result := b.ToString('KB');
 
   // Assert
-  Assert.AreEqual('10.5 KB', result);
+  Assert.AreEqual(FormatFloat('0.0 KB', lDouble, FFormatSettings), result);
 end;
 
 procedure TToStringMethod.ReturnsProvidedNumberFormat();
 var
   b: TByteSize;
   result: String;
+  lDouble: Double;
 begin
+  lDouble := 10.1234;
   // Arrange
   b := TByteSize.FromKiloBytes(10.1234);
 
@@ -88,7 +106,7 @@ begin
   result := b.ToString('#.#### KB');
 
   // Assert
-  Assert.AreEqual('10.1234 KB', result);
+  Assert.AreEqual(FormatFloat('0.0000 KB', lDouble, FFormatSettings), result);
 end;
 
 procedure TToStringMethod.ReturnsBits();
@@ -200,7 +218,9 @@ procedure TToStringMethod.ReturnsSelectedFormat();
 var
   b: TByteSize;
   result: String;
+  lDouble: Double;
 begin
+  lDouble := 10;
   // Arrange
   b := TByteSize.FromTeraBytes(10);
 
@@ -208,7 +228,7 @@ begin
   result := b.ToString('0.0 TB');
 
   // Assert
-  Assert.AreEqual('10.0 TB', result);
+  Assert.AreEqual(FormatFloat('0.0 TB', lDouble, FFormatSettings), result);
 end;
 
 procedure TToStringMethod.ReturnsLargestMetricPrefixLargerThanZero();
@@ -278,6 +298,27 @@ begin
 
   // Assert
   Assert.AreEqual('9,8 MB', result);
+end;
+
+procedure TToStringMethod.
+  ReturnsLargestMetricSuffixUsingCustomFormatSettingsThree();
+var
+  GermanFormatSettings: TFormatSettings;
+  b: TByteSize;
+  result: String;
+  lDouble: Double;
+begin
+  lDouble := 10.5;
+  GermanFormatSettings := TFormatSettings.Create('de-DE');
+
+  // Arrange
+  b := TByteSize.FromKiloBytes(10.5);
+
+  // Act
+  result := b.ToString('0.0 KB', GermanFormatSettings);
+
+  // Assert
+  Assert.AreEqual(FormatFloat('0.0 KB', lDouble, GermanFormatSettings), result);
 end;
 
 procedure TToStringMethod.ReturnsLargestMetricSuffixUsingCurrentLocale();
