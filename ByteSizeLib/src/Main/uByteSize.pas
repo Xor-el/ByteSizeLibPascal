@@ -52,7 +52,6 @@ type
 
   const
 
-    Int64MinValue = Int64(-9223372036854775808);
     Int64MaxValue = Int64(9223372036854775807);
 
     BitsInByte = Int64(8);
@@ -695,7 +694,7 @@ end;
 
 function TByteSize.GetMinValue: TByteSize;
 begin
-  result := TByteSize.FromBits(Int64MinValue);
+  result := TByteSize.FromBits(0);
 end;
 
 function TByteSize.GetMaxValue: TByteSize;
