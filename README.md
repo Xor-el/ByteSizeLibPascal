@@ -10,7 +10,7 @@ ByteSizeLibPascal
 #### Building
 
 This project was created using Delphi 10 Seattle Update 1 but should compile in 
-any Delphi version from XE3 and FreePascal 3.0 Upwards.  
+any Delphi version from 2009 and FreePascal 3.0.0 Upwards.  
 
 ## Usage 
 

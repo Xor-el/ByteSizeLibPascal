@@ -1,19 +1,38 @@
 unit uByteSize;
 
-{$ZEROBASEDSTRINGS ON}
-{$IFDEF FPC}
-{$mode delphi}
+{$IFNDEF FPC}
+{$IF CompilerVersion >= 22}  // XE and Above
+{$DEFINE SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE}
+{$IFEND}
+{$IF CompilerVersion >= 23}  // XE2 and Above
+{$DEFINE SCOPEDUNITNAMES}
+{$IFEND}
+{$IF CompilerVersion >= 24}  // XE3 and Above
+{$ZEROBASEDSTRINGS OFF}
+{$IFEND}
 {$ENDIF}
+{$IFDEF FPC}
+{$MODE delphi}
+{$ENDIF FPC}
 
 interface
 
 uses
 
-{$IFDEF FPC}
-  SysUtils, StrUtils
+{$IFNDEF FPC}
+{$IFDEF SCOPEDUNITNAMES}
+  System.SysUtils,
+  System.StrUtils,
+  System.Generics.Defaults;
 {$ELSE}
-    System.SysUtils, System.StrUtils, System.Generics.Defaults
-{$ENDIF};
+  SysUtils,
+  StrUtils,
+  Generics.Defaults;
+{$ENDIF}
+{$ELSE}
+SysUtils,
+  StrUtils;
+{$ENDIF FPC}
 
 type
 
@@ -128,9 +147,7 @@ type
   end;
 
   EFormatException = class(Exception);
-{$IFDEF FPC}
   EArgumentNilException = class(Exception);
-{$ENDIF}
 
 implementation
 
@@ -296,10 +313,15 @@ function TByteSize.ToString: String;
 var
   lFormatSettings: TFormatSettings;
 begin
+
 {$IFDEF FPC}
-  GetLocaleFormatSettings(0, lFormatSettings);
+  lFormatSettings := DefaultFormatSettings;
 {$ELSE}
+{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
   lFormatSettings := TFormatSettings.Create;
+{$ELSE}
+  GetLocaleFormatSettings(0, lFormatSettings);
+{$IFEND}
 {$ENDIF}
   result := Self.ToString('#.##', lFormatSettings);
 
@@ -310,9 +332,13 @@ var
   lFormatSettings: TFormatSettings;
 begin
 {$IFDEF FPC}
-  GetLocaleFormatSettings(0, lFormatSettings);
+  lFormatSettings := DefaultFormatSettings;
 {$ELSE}
+{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
   lFormatSettings := TFormatSettings.Create;
+{$ELSE}
+  GetLocaleFormatSettings(0, lFormatSettings);
+{$IFEND}
 {$ENDIF}
   result := Self.ToString(lformat, lFormatSettings);
 end;
@@ -333,13 +359,17 @@ begin
 {$IFDEF FPC}
   if formatsettings.DecimalSeparator = '' then
   begin
-    GetLocaleFormatSettings(0, formatsettings);
+    formatsettings := DefaultFormatSettings;
   end;
 {$ELSE}
   comparer := TComparer<TFormatSettings>.Default;
 
   if comparer.Compare(formatsettings, Default (TFormatSettings)) = 0 then
+{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
     formatsettings := TFormatSettings.Create;
+{$ELSE}
+    GetLocaleFormatSettings(0, formatsettings);
+{$IFEND}
 {$ENDIF}
   if (has('PB', lformat)) then
   begin
@@ -539,7 +569,7 @@ begin
 
   // Pick first non-digit number
 
-  for num := 0 to Pred(Length(tempS)) do
+  for num := 1 to Length(tempS) do
   begin
     if (not(CharInSet(tempS[num], ['0' .. '9']) or (tempS[num] = '.'))) then
     begin
@@ -558,13 +588,17 @@ begin
   lastNumber := num;
 
   // Cut the input string in half
-  numberPart := Trim(Copy(tempS, 0, lastNumber));
-  sizePart := Trim(Copy(tempS, lastNumber + 1, Length(tempS) - lastNumber));
+  numberPart := Trim(Copy(tempS, 1, lastNumber - 1));
+  sizePart := Trim(Copy(tempS, lastNumber, Length(tempS) - (lastNumber - 1)));
 
 {$IFDEF FPC}
-  GetLocaleFormatSettings(0, lFormatSettings);
+  lFormatSettings := DefaultFormatSettings;
 {$ELSE}
+{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
   lFormatSettings := TFormatSettings.Create;
+{$ELSE}
+  GetLocaleFormatSettings(0, lFormatSettings);
+{$IFEND}
 {$ENDIF}
   // Get the numeric part
   if not(TryStrToFloat(numberPart, number, lFormatSettings)) then
@@ -657,7 +691,7 @@ var
 
 begin
   result := false;
-  for i := Low(InString) to High(InString) do
+  for i := 1 to Length(InString) do
 
   begin
     if InString[i] = InChar then
