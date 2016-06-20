@@ -117,6 +117,8 @@ end;
 
 ### String Representation
 
+All String Parsing (`String to TByteSize`) operations are localized to use the number decimal separator of the currently set Locale.
+
 #### ToString
 
 `TByteSize` comes with a handy `ToString` method that uses the largest metric prefix whose value is greater than or equal to 1.
@@ -192,6 +194,7 @@ TByteSize.Parse('1.55 gb');
 TByteSize.Parse('1.55 TB');
 TByteSize.Parse('1.55 tB');
 TByteSize.Parse('1.55 tb');
+TByteSize.Parse('1,55 kb'); // de-DE culture
 end;
 ```
 

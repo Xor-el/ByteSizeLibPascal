@@ -3,7 +3,7 @@ unit ParsingMethodsTest;
 interface
 
 uses
-  DUnitX.TestFramework, uByteSize;
+  DUnitX.TestFramework, System.SysUtils, Winapi.Windows, uByteSize;
 
 type
 
@@ -45,6 +45,8 @@ type
     procedure ParseTB();
     [Test]
     procedure ParsePB();
+    [Test]
+    procedure ParseLocaleNumberSeparator();
 
   end;
 
@@ -247,6 +249,35 @@ begin
 
   result := TByteSize.Parse(val);
   Assert.AreEqual(expected, result);
+end;
+
+procedure TParsingMethods.ParseLocaleNumberSeparator();
+var
+  OriginalLocale: Cardinal;
+  val: String;
+  expected, result: TByteSize;
+begin
+
+  OriginalLocale := GetThreadLocale;
+  if SetThreadLocale(1031) then // Set Locale to German (de-DE)
+  begin
+    val := '1,5 MB';
+    // Arrange
+    expected := TByteSize.FromMegaBytes(1.5);
+
+    // Act
+    result := TByteSize.Parse(val);
+
+    // Assert
+    Assert.AreEqual(expected, result);
+  end
+  else
+  begin
+    raise Exception.Create('Error Setting Locale (First Instance)');
+  end;
+
+  if not(SetThreadLocale(OriginalLocale)) then
+    raise Exception.Create('Error Setting Locale (Second Instance)');
 end;
 
 initialization

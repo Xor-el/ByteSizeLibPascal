@@ -554,6 +554,7 @@ var
   numberPart, sizePart, tempS: String;
   number, d1: Double;
   lFormatSettings: TFormatSettings;
+  seperator: Char;
 
 begin
   // Arg checking
@@ -567,11 +568,23 @@ begin
   tempS := TrimLeft(s); // Protect against leading spaces
   found := false;
 
+{$IFDEF FPC}
+  lFormatSettings := DefaultFormatSettings;
+{$ELSE}
+{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
+  lFormatSettings := TFormatSettings.Create;
+{$ELSE}
+  GetLocaleFormatSettings(0, lFormatSettings);
+{$IFEND}
+{$ENDIF}
+  seperator := lFormatSettings.DecimalSeparator;
+
   // Pick first non-digit number
 
   for num := 1 to Length(tempS) do
   begin
-    if (not(CharInSet(tempS[num], ['0' .. '9']) or (tempS[num] = '.'))) then
+    if (not(CharInSet(tempS[num], ['0' .. '9']) or (tempS[num] = seperator)))
+    then
     begin
       found := True;
       break;
@@ -591,15 +604,6 @@ begin
   numberPart := Trim(Copy(tempS, 1, lastNumber - 1));
   sizePart := Trim(Copy(tempS, lastNumber, Length(tempS) - (lastNumber - 1)));
 
-{$IFDEF FPC}
-  lFormatSettings := DefaultFormatSettings;
-{$ELSE}
-{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
-  lFormatSettings := TFormatSettings.Create;
-{$ELSE}
-  GetLocaleFormatSettings(0, lFormatSettings);
-{$IFEND}
-{$ENDIF}
   // Get the numeric part
   if not(TryStrToFloat(numberPart, number, lFormatSettings)) then
   begin
