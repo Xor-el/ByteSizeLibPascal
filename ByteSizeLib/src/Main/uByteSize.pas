@@ -554,7 +554,7 @@ var
   numberPart, sizePart, tempS: String;
   number, d1: Double;
   lFormatSettings: TFormatSettings;
-  seperator: Char;
+  decimalSeperator, groupSeperator: Char;
 
 begin
   // Arg checking
@@ -577,14 +577,16 @@ begin
   GetLocaleFormatSettings(0, lFormatSettings);
 {$IFEND}
 {$ENDIF}
-  seperator := lFormatSettings.DecimalSeparator;
+  decimalSeperator := lFormatSettings.DecimalSeparator;
+  groupSeperator := lFormatSettings.ThousandSeparator;
 
   // Pick first non-digit number
 
   for num := 1 to Length(tempS) do
   begin
-    if (not(CharInSet(tempS[num], ['0' .. '9']) or (tempS[num] = seperator)))
-    then
+    if (not(CharInSet(tempS[num], ['0' .. '9']) or
+      (tempS[num] = decimalSeperator) or (tempS[num] = groupSeperator))) then
+
     begin
       found := True;
       break;
@@ -605,6 +607,11 @@ begin
   sizePart := Trim(Copy(tempS, lastNumber, Length(tempS) - (lastNumber - 1)));
 
   // Get the numeric part
+  // since ThousandSeperators and Currency Symbols are not allowed in
+  // "TryStrToFloat" and "StrToFloat" for ("Delphi"), we simply replace our "ThousandSeperators"
+  // with an empty Char.
+  numberPart := StringReplace(numberPart, groupSeperator, '',
+    [rfReplaceAll, rfIgnoreCase]);
   if not(TryStrToFloat(numberPart, number, lFormatSettings)) then
   begin
     result := false;

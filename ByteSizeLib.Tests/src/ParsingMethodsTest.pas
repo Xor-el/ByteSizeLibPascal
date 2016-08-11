@@ -260,10 +260,11 @@ begin
 
   OriginalLocale := GetThreadLocale;
   if SetThreadLocale(1031) then // Set Locale to German (de-DE)
+
   begin
-    val := '1,5 MB';
+    val := '1.500,5 MB';
     // Arrange
-    expected := TByteSize.FromMegaBytes(1.5);
+    expected := TByteSize.FromMegaBytes(1500.5);
 
     // Act
     result := TByteSize.Parse(val);
