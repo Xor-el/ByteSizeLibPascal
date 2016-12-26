@@ -48,6 +48,8 @@ type
     procedure ReturnsLargestMetricSuffixUsingCustomFormatSettingsThree();
     [Test]
     procedure ReturnsLargestMetricSuffixUsingCurrentLocale();
+    [Test]
+    procedure ReturnsZeroBits();
   end;
 
 implementation
@@ -346,6 +348,21 @@ begin
 
   if not(SetThreadLocale(OriginalLocale)) then
     raise Exception.Create('Error Setting Locale (Second Instance)');
+end;
+
+procedure TToStringMethod.ReturnsZeroBits();
+var
+  b: TByteSize;
+  result: String;
+begin
+  // Arrange
+  b := TByteSize.FromBits(0);
+
+  // Act
+  result := b.ToString();
+
+  // Assert
+  Assert.AreEqual('0 b', result);
 end;
 
 initialization

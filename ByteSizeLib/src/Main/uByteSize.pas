@@ -1,38 +1,41 @@
 unit uByteSize;
 
 {$IFNDEF FPC}
+{$IF CompilerVersion >= 24}  // XE3 and Above
+{$ZEROBASEDSTRINGS OFF}
+{$LEGACYIFEND ON}
+{$IFEND}
 {$IF CompilerVersion >= 22}  // XE and Above
 {$DEFINE SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE}
 {$IFEND}
 {$IF CompilerVersion >= 23}  // XE2 and Above
 {$DEFINE SCOPEDUNITNAMES}
 {$IFEND}
-{$IF CompilerVersion >= 24}  // XE3 and Above
-{$ZEROBASEDSTRINGS OFF}
-{$IFEND}
-{$ENDIF}
-{$IFDEF FPC}
+{$ELSE}
 {$MODE delphi}
 {$ENDIF FPC}
 
 interface
 
 uses
-
-{$IFNDEF FPC}
 {$IFDEF SCOPEDUNITNAMES}
   System.SysUtils,
   System.StrUtils,
   System.Generics.Defaults;
 {$ELSE}
-  SysUtils,
-  StrUtils,
-  Generics.Defaults;
-{$ENDIF}
-{$ELSE}
-SysUtils,
-  StrUtils;
+{$IFNDEF FPC}
+  Generics.Defaults,
 {$ENDIF FPC}
+  SysUtils,
+  StrUtils;
+{$ENDIF}
+
+resourcestring
+  SEmptyString = 'Input String is null or whitespace';
+  SInvalidInput = 'No byte indicator found in value "%s".';
+  SInvalidInput2 = 'No number found in value "%s".';
+  SInvalidBit = 'Can''t have partial bits for value "%s".';
+  SUnSupportedMagnitude = 'Bytes of magnitude "%s" is not supported.';
 
 type
 
@@ -40,34 +43,41 @@ type
 
   public
 
-    Bits: Int64;
-    Bytes: Double;
-    KiloBytes: Double;
-    MegaBytes: Double;
-    GigaBytes: Double;
-    TeraBytes: Double;
-    PetaBytes: Double;
-
   strict private
 
-    function GetMinValue: TByteSize;
-    function GetMaxValue: TByteSize;
+    FBits: Int64;
+    FBytes: Double;
 
-    function LargestWholeNumberSymbol: String;
-    function LargestWholeNumberValue: Double;
+    function GetBits: Int64; inline;
+    function GetBytes: Double; inline;
+    function GetKiloBytes: Double; inline;
+    function GetMegaBytes: Double; inline;
+    function GetGigaBytes: Double; inline;
+    function GetTeraBytes: Double; inline;
+    function GetPetaBytes: Double; inline;
 
-    function has(const SubStr: String; const Str: String): Boolean;
-    function output(n: Double; formatsettings: TFormatSettings;
-      const formatstr: String): String;
+    function GetLargestWholeNumberSymbol: String;
+    property LargestWholeNumberSymbol: String read GetLargestWholeNumberSymbol;
+    function GetLargestWholeNumberValue: Double;
+    property LargestWholeNumberValue: Double read GetLargestWholeNumberValue;
+
+    class function GetMinValue: TByteSize; static; inline;
+    class function GetMaxValue: TByteSize; static; inline;
 
     { Utils }
+
+    class function has(const SubStr: String; const Str: String): Boolean;
+      static; inline;
+    class function output(n: Double; formatsettings: TFormatSettings;
+      const formatstr: String): String; static; inline;
 
     class function Contains(InChar: Char; const InString: String)
       : Boolean; static;
     class function IndexOf(const SubStr: String; const Str: String;
       caseSensitive: Boolean): Integer; static;
-    class function IsNullOrWhiteSpace(const InValue: string): Boolean; static;
-    class function FloatingMod(a: Double; b: Double): Double; static;
+    class function IsNullOrWhiteSpace(const InValue: string): Boolean;
+      static; inline;
+    class function FloatingMod(a: Double; b: Double): Double; static; inline;
 
   const
 
@@ -90,8 +100,16 @@ type
 
   public
 
-    property MinValue: TByteSize read GetMinValue;
-    property MaxValue: TByteSize read GetMaxValue;
+    property Bits: Int64 read GetBits;
+    property Bytes: Double read GetBytes;
+    property KiloBytes: Double read GetKiloBytes;
+    property MegaBytes: Double read GetMegaBytes;
+    property GigaBytes: Double read GetGigaBytes;
+    property TeraBytes: Double read GetTeraBytes;
+    property PetaBytes: Double read GetPetaBytes;
+
+    class property MinValue: TByteSize read GetMinValue;
+    class property MaxValue: TByteSize read GetMaxValue;
 
     constructor Create(byteSize: Double);
 
@@ -157,18 +175,11 @@ var
 begin
   tempDouble := byteSize * BitsInByte;
   // Get Truncation because bits are whole units
-  Bits := Trunc(tempDouble);
-
-  Bytes := byteSize;
-  KiloBytes := byteSize / BytesInKiloByte;
-  MegaBytes := byteSize / BytesInMegaByte;
-  GigaBytes := byteSize / BytesInGigaByte;
-  TeraBytes := byteSize / BytesInTeraByte;
-  PetaBytes := byteSize / BytesInPetaByte;
-
+  FBits := Trunc(tempDouble);
+  FBytes := byteSize;
 end;
 
-function TByteSize.LargestWholeNumberSymbol: String;
+function TByteSize.GetLargestWholeNumberSymbol: String;
 begin
 
   // Absolute value is used to deal with negative values
@@ -212,7 +223,7 @@ begin
 
 end;
 
-function TByteSize.LargestWholeNumberValue: Double;
+function TByteSize.GetLargestWholeNumberValue: Double;
 begin
 
   // Absolute value is used to deal with negative values
@@ -317,13 +328,13 @@ begin
 {$IFDEF FPC}
   lFormatSettings := DefaultFormatSettings;
 {$ELSE}
-{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
+{$IFDEF SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE}
   lFormatSettings := TFormatSettings.Create;
 {$ELSE}
   GetLocaleFormatSettings(0, lFormatSettings);
-{$IFEND}
 {$ENDIF}
-  result := Self.ToString('#.##', lFormatSettings);
+{$ENDIF}
+  result := Self.ToString('0.##', lFormatSettings);
 
 end;
 
@@ -334,11 +345,11 @@ begin
 {$IFDEF FPC}
   lFormatSettings := DefaultFormatSettings;
 {$ELSE}
-{$IF DEFINED (SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE)}
+{$IFDEF SUPPORT_TFORMATSETTINGS_CREATE_INSTANCE}
   lFormatSettings := TFormatSettings.Create;
 {$ELSE}
   GetLocaleFormatSettings(0, lFormatSettings);
-{$IFEND}
+{$ENDIF}
 {$ENDIF}
   result := Self.ToString(lformat, lFormatSettings);
 end;
@@ -353,7 +364,7 @@ var
 begin
   if ((not Contains('#', lformat)) and (not Contains('0', lformat))) then
   begin
-    lformat := '#.## ' + lformat;
+    lformat := '0.## ' + lformat;
   end;
 
 {$IFDEF FPC}
@@ -548,6 +559,18 @@ end;
 
 class function TByteSize.TryParse(const s: String;
   out varresult: TByteSize): Boolean;
+
+begin
+  try
+    varresult := Parse(s);
+    result := True;
+  except
+    varresult := Default (TByteSize);
+    result := False;
+  end;
+end;
+
+class function TByteSize.Parse(const s: String): TByteSize;
 var
   num, lastNumber, tempInt: Integer;
   found: Boolean;
@@ -555,18 +578,15 @@ var
   number, d1: Double;
   lFormatSettings: TFormatSettings;
   decimalSeperator, groupSeperator: Char;
-
 begin
+
   // Arg checking
   if (IsNullOrWhiteSpace(s)) then
-    raise EArgumentNilException.Create('Input String is null or whitespace');
-
-  // Setup the result
-  varresult := Default (TByteSize);
+    raise EArgumentNilException.CreateRes(@SEmptyString);
 
   // Get the index of the first non-digit character
   tempS := TrimLeft(s); // Protect against leading spaces
-  found := false;
+  found := False;
 
 {$IFDEF FPC}
   lFormatSettings := DefaultFormatSettings;
@@ -596,8 +616,9 @@ begin
 
   if (not found) then
   begin
-    result := false;
-    Exit;
+
+    raise EFormatException.CreateResFmt(@SInvalidInput, [s]);
+
   end;
 
   lastNumber := num;
@@ -614,8 +635,7 @@ begin
     [rfReplaceAll, rfIgnoreCase]);
   if not(TryStrToFloat(numberPart, number, lFormatSettings)) then
   begin
-    result := false;
-    Exit;
+    raise EFormatException.CreateResFmt(@SInvalidInput2, [s]);
   end;
 
   // Get the magnitude part
@@ -628,68 +648,65 @@ begin
         d1 := 1 * 1.0;
         if (FloatingMod(number, d1) <> 0) then // Can't have partial bits
         begin
-          result := false;
-          Exit;
+          raise EFormatException.CreateResFmt(@SInvalidBit, [s]);
         end
         else
         begin
-          varresult := FromBits(Trunc(number));
+          result := FromBits(Trunc(number));
+          Exit;
         end;
 
       end;
 
     1:
       begin
-        varresult := FromBytes(number);
+        result := FromBytes(number);
+        Exit;
       end;
 
     2 .. 4:
       begin
-        varresult := FromKiloBytes(number);
+        result := FromKiloBytes(number);
+        Exit;
       end;
 
     5 .. 7:
       begin
-        varresult := FromMegaBytes(number);
+        result := FromMegaBytes(number);
+        Exit;
       end;
 
     8 .. 10:
       begin
-        varresult := FromGigaBytes(number);
+        result := FromGigaBytes(number);
+        Exit;
       end;
 
     11 .. 13:
       begin
-        varresult := FromTeraBytes(number);
+        result := FromTeraBytes(number);
+        Exit;
       end;
 
     14 .. 16:
       begin
-        varresult := FromPetaBytes(number);
+        result := FromPetaBytes(number);
+        Exit;
       end;
 
-  end;
+  else
+    raise EFormatException.CreateResFmt(@SUnSupportedMagnitude, [sizePart]);
 
-  result := True;
-
-end;
-
-class function TByteSize.Parse(const s: String): TByteSize;
-begin
-
-  if not(TryParse(s, result)) then
-  begin
-    raise EFormatException.Create('Value is not in the correct format');
   end;
 
 end;
 
-function TByteSize.has(const SubStr: String; const Str: String): Boolean;
+class function TByteSize.has(const SubStr: String; const Str: String): Boolean;
 begin
-  result := IndexOf(SubStr, Str, false) <> -1;
+  result := IndexOf(SubStr, Str, False) <> -1;
 end;
 
-function TByteSize.output(n: Double; formatsettings: TFormatSettings;
+class function TByteSize.output(n: Double; formatsettings: TFormatSettings;
   const formatstr: String): String;
 begin
   result := FormatFloat(formatstr, n, formatsettings);
@@ -701,7 +718,7 @@ var
   i: Integer;
 
 begin
-  result := false;
+  result := False;
   for i := 1 to Length(InString) do
 
   begin
@@ -737,14 +754,49 @@ begin
   result := a - b * Trunc(tempDouble);
 end;
 
-function TByteSize.GetMinValue: TByteSize;
+class function TByteSize.GetMinValue: TByteSize;
 begin
   result := TByteSize.FromBits(0);
 end;
 
-function TByteSize.GetMaxValue: TByteSize;
+function TByteSize.GetPetaBytes: Double;
+begin
+  result := Bytes / BytesInPetaByte;
+end;
+
+function TByteSize.GetTeraBytes: Double;
+begin
+  result := Bytes / BytesInTeraByte;
+end;
+
+function TByteSize.GetBits: Int64;
+begin
+  result := FBits;
+end;
+
+function TByteSize.GetBytes: Double;
+begin
+  result := FBytes;
+end;
+
+function TByteSize.GetGigaBytes: Double;
+begin
+  result := Bytes / BytesInGigaByte;
+end;
+
+function TByteSize.GetKiloBytes: Double;
+begin
+  result := Bytes / BytesInKiloByte;
+end;
+
+class function TByteSize.GetMaxValue: TByteSize;
 begin
   result := TByteSize.FromBits(Int64MaxValue);
+end;
+
+function TByteSize.GetMegaBytes: Double;
+begin
+  result := Bytes / BytesInMegaByte;
 end;
 
 end.
